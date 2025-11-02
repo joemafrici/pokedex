@@ -97,15 +97,16 @@ fn handle_edit_pokemon(conn: &Connection) {
     println!("Enter the name of the pokemon you want to edit:");
     let mut buf = String::new();
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
+    let buf = buf.trim();
 
     println!("Enter the field you would like to edit. 1. Name, 2. has_caught, 3. type");
     let mut buf2 = String::new();
     io::stdin().read_line(&mut buf2).expect("Should have been able to read from stdin");
     let op: u32 = buf2.trim().parse().expect("Should have been able to convert user menu option input to integer. Maybe the user entered not a number?");
     match op {
-        1 => handle_edit_pokemon_name(&conn, &buf.trim()),
+        1 => handle_edit_pokemon_name(&conn, &buf),
         2 => handle_edit_pokemon_has_caught(&conn),
-        2 => handle_edit_pokemon_type(&conn),
+        3 => handle_edit_pokemon_type(&conn, &buf),
         _ => println!("Invalid input."),
     }
 }
@@ -119,7 +120,15 @@ fn handle_edit_pokemon_name(conn: &Connection, pokemon_name: &str) {
     println!("Updated {} row(s)", rows_upddated);
 }
 fn handle_edit_pokemon_has_caught(conn: &Connection) {}
-fn handle_edit_pokemon_type(conn: &Connection) {}
+fn handle_edit_pokemon_type(conn: &Connection, pokemon_name: &str) {
+    println!("Enter the new pokemon type");
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
+    let type_: Type = buf.parse().expect("Should hav been able to parse Type");
+
+    let rows_upddated= conn.execute("UPDATE pokemon SET type = ?2 WHERE name = ?1", params![pokemon_name, type_]).expect("Should have been able to prepare sql query");
+    println!("Updated {} row(s)", rows_upddated);
+}
 
 #[derive(Debug, Clone)]
 struct Pokemon {
