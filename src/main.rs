@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use std::io;
-use rusqlite::{Connection, ToSql};
+use rusqlite::{params, Connection, ToSql};
 use rusqlite::types::{ValueRef, FromSql, FromSqlResult, ToSqlOutput};
 
 fn main() {
@@ -17,12 +17,13 @@ fn main() {
 
     loop {
         let mut op_buff = String::new();
-        println!("Enter an option. 1: Add. 2: List");
+        println!("Enter an option. 1: Add. 2: List All, 3: Search by Type");
         io::stdin().read_line(&mut op_buff).expect("Should have been able to read from stdio");
         let op: u32 = op_buff.trim().parse().expect("Should have been able to convert user menu option input to integer. Maybe the user entered not a number?");
         match op {
             1 => handle_add(&conn),
             2 => handle_list(&conn),
+            3 => handle_search_by_type(&conn),
             _ => continue
         }
     }
@@ -65,6 +66,27 @@ fn handle_list(conn: &Connection) {
             type_: row.get("type").expect("Should have been able to get type"),
         })
     }).expect("Should have been able to convert database results to rust objects");
+    for pokemon in pokemon_iter {
+        println!("Found pokemon {:?}", pokemon.expect("Should have been able to get pokemon"));
+    }
+}
+
+fn handle_search_by_type(conn: &Connection) {
+    println!("Enter the pokemon type to search for:");
+
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
+    let search_type: Type = buf.parse().expect("Should have been able to parse search type");
+    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon WHERE type = ?1").expect("Should have been able to prepare sql query");
+
+    let pokemon_iter = stmt.query_map(params![search_type], |row| {
+        Ok(Pokemon {
+            name: row.get("name").expect("Should have been bale to get name"),
+            has_caught: row.get("has_caught").expect("Should have been able to get has_caught"),
+            type_: row.get("type").expect("Should have been able to get type"),
+        })
+    }).expect("Should have been able to query database");
+
     for pokemon in pokemon_iter {
         println!("Found pokemon {:?}", pokemon.expect("Should have been able to get pokemon"));
     }
