@@ -17,13 +17,14 @@ fn main() {
 
     loop {
         let mut op_buff = String::new();
-        println!("Enter an option. 1: Add. 2: List All, 3: Search by Type");
+        println!("Enter an option. 1: Add. 2: List All, 3: Search by Type, 4. Edit pokemon");
         io::stdin().read_line(&mut op_buff).expect("Should have been able to read from stdio");
         let op: u32 = op_buff.trim().parse().expect("Should have been able to convert user menu option input to integer. Maybe the user entered not a number?");
         match op {
             1 => handle_add(&conn),
             2 => handle_list(&conn),
             3 => handle_search_by_type(&conn),
+            4 => handle_edit_pokemon(&conn),
             _ => continue
         }
     }
@@ -91,6 +92,34 @@ fn handle_search_by_type(conn: &Connection) {
         println!("Found pokemon {:?}", pokemon.expect("Should have been able to get pokemon"));
     }
 }
+fn handle_edit_pokemon(conn: &Connection) {
+    handle_list(&conn);
+    println!("Enter the name of the pokemon you want to edit:");
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
+
+    println!("Enter the field you would like to edit. 1. Name, 2. has_caught, 3. type");
+    let mut buf2 = String::new();
+    io::stdin().read_line(&mut buf2).expect("Should have been able to read from stdin");
+    let op: u32 = buf2.trim().parse().expect("Should have been able to convert user menu option input to integer. Maybe the user entered not a number?");
+    match op {
+        1 => handle_edit_pokemon_name(&conn, &buf.trim()),
+        2 => handle_edit_pokemon_has_caught(&conn),
+        2 => handle_edit_pokemon_type(&conn),
+        _ => println!("Invalid input."),
+    }
+}
+// need to change this to return a result eventually
+fn handle_edit_pokemon_name(conn: &Connection, pokemon_name: &str) {
+    println!("Enter the new pokemon name");
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
+
+    let rows_upddated= conn.execute("UPDATE pokemon SET name = ?2 WHERE name = ?1", params![pokemon_name, buf.trim()]).expect("Should have been able to prepare sql query");
+    println!("Updated {} row(s)", rows_upddated);
+}
+fn handle_edit_pokemon_has_caught(conn: &Connection) {}
+fn handle_edit_pokemon_type(conn: &Connection) {}
 
 #[derive(Debug, Clone)]
 struct Pokemon {
