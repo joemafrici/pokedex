@@ -105,7 +105,7 @@ fn handle_edit_pokemon(conn: &Connection) {
     let op: u32 = buf2.trim().parse().expect("Should have been able to convert user menu option input to integer. Maybe the user entered not a number?");
     match op {
         1 => handle_edit_pokemon_name(&conn, &buf),
-        2 => handle_edit_pokemon_has_caught(&conn),
+        2 => handle_edit_pokemon_has_caught(&conn, &buf),
         3 => handle_edit_pokemon_type(&conn, &buf),
         _ => println!("Invalid input."),
     }
@@ -116,18 +116,25 @@ fn handle_edit_pokemon_name(conn: &Connection, pokemon_name: &str) {
     let mut buf = String::new();
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
 
-    let rows_upddated= conn.execute("UPDATE pokemon SET name = ?2 WHERE name = ?1", params![pokemon_name, buf.trim()]).expect("Should have been able to prepare sql query");
-    println!("Updated {} row(s)", rows_upddated);
+    let rows_updated= conn.execute("UPDATE pokemon SET name = ?2 WHERE name = ?1", params![pokemon_name, buf.trim()]).expect("Should have been able to prepare sql query");
+    println!("Updated {} row(s)", rows_updated);
 }
-fn handle_edit_pokemon_has_caught(conn: &Connection) {}
+fn handle_edit_pokemon_has_caught(conn: &Connection, pokemon_name: &str) {
+    let rows_updated = conn.execute("UPDATE pokemon SET has_caught = NOT has_caught WHERE name = ?1", params![pokemon_name]).expect("Should have been able to toggle has_caught value");
+    if rows_updated == 1 {
+        println!("has_caught value toggled");
+    } else {
+        println!("Did not find record to update");
+    }
+}
 fn handle_edit_pokemon_type(conn: &Connection, pokemon_name: &str) {
     println!("Enter the new pokemon type");
     let mut buf = String::new();
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
     let type_: Type = buf.parse().expect("Should hav been able to parse Type");
 
-    let rows_upddated= conn.execute("UPDATE pokemon SET type = ?2 WHERE name = ?1", params![pokemon_name, type_]).expect("Should have been able to prepare sql query");
-    println!("Updated {} row(s)", rows_upddated);
+    let rows_updated= conn.execute("UPDATE pokemon SET type = ?2 WHERE name = ?1", params![pokemon_name, type_]).expect("Should have been able to prepare sql query");
+    println!("Updated {} row(s)", rows_updated);
 }
 
 #[derive(Debug, Clone)]
