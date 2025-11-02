@@ -49,7 +49,7 @@ fn handle_add(conn: &Connection) {
     io::stdin().read_line(&mut buf3).expect("Should have been able to read from stdio");
 
     let pokemon = Pokemon {
-        name: buf,
+        name: buf.trim().to_string(),
         has_caught,
         type_: buf3.parse().expect("Should have been able to parse user supplied type to Type object"),
     };
