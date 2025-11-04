@@ -34,20 +34,27 @@ fn main() {
 }
 fn handle_add(conn: &Connection) {
     let mut buf = String::new();
-    let mut buf2 = String::new();
     let mut buf3 = String::new();
 
     println!("Enter the Pokemon to add:");
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdio");
 
-    println!("Did you catch this Pokemon? 1 (Yes) 2 (No)");
-    io::stdin().read_line(&mut buf2).expect("Should have been able to read from stdio");
-    let op: u32 = buf2.trim().parse().expect("Should have been able to convert user menu option input to integer. Maybe the user entered not a number?");
-    let has_caught;
-    match op {
-        1 => has_caught = true,
-        _ => has_caught = false,
-    }
+
+    let has_caught = loop {
+        let mut has_caught_buf = String::new();
+        println!("Did you catch this Pokemon? 1 (Yes) 2 (No)");
+        io::stdin().read_line(&mut has_caught_buf).expect("Should have been able to read from stdio");
+
+        if let Ok(op) = has_caught_buf.trim().parse::<u32>() {
+            match op {
+                1 => break true,
+                2 => break false,
+                _ => println!("Enter 1 for Yes and 2 for No"),
+            }
+        } else {
+            println!("Invalid input. Enter 1 for Yes and 2 for No")
+        }
+    };
 
     println!("Enter the pokemon's type:");
     io::stdin().read_line(&mut buf3).expect("Should have been able to read from stdio");
