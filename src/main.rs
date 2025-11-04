@@ -33,11 +33,11 @@ fn main() {
     }
 }
 fn handle_add(conn: &Connection) {
-    let mut buf = String::new();
-    let mut buf3 = String::new();
+    let mut name_buf = String::new();
 
     println!("Enter the Pokemon to add:");
-    io::stdin().read_line(&mut buf).expect("Should have been able to read from stdio");
+    io::stdin().read_line(&mut name_buf).expect("Should have been able to read from stdio");
+    let name_buf = name_buf.trim();
 
 
     let has_caught = loop {
@@ -56,13 +56,24 @@ fn handle_add(conn: &Connection) {
         }
     };
 
-    println!("Enter the pokemon's type:");
-    io::stdin().read_line(&mut buf3).expect("Should have been able to read from stdio");
+    let type_ = loop {
+        let mut type_buf = String::new();
+
+        println!("Enter the pokemon's type:");
+        io::stdin().read_line(&mut type_buf).expect("Should have been able to read from stdio");
+        match type_buf.parse::<Type>() {
+            Ok(t) => break t,
+            Err(e) => {
+                println!("Invalid type: {}. Enter a valid Pokemon type", e);
+                println!("Valid types include: Psychic, Water, Grass, Fire, Fairy, Normal, Bug, Ghost, Dragon, Electric, Ground, Rock, Dark, Unknown.");
+            }
+        }
+    };
 
     let pokemon = Pokemon {
-        name: buf.trim().to_string(),
+        name: name_buf.to_string(),
         has_caught,
-        type_: buf3.parse().expect("Should have been able to parse user supplied type to Type object"),
+        type_
     };
 
     conn.execute("INSERT INTO pokemon (name, has_caught, type) VALUES (?1, ?2, ?3)", (pokemon.name, pokemon.has_caught, pokemon.type_)).expect("Should have been able to add pokemon to database");
