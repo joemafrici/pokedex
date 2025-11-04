@@ -76,7 +76,10 @@ fn handle_add(conn: &Connection) {
         type_
     };
 
-    conn.execute("INSERT INTO pokemon (name, has_caught, type) VALUES (?1, ?2, ?3)", (pokemon.name, pokemon.has_caught, pokemon.type_)).expect("Should have been able to add pokemon to database");
+    match conn.execute("INSERT INTO pokemon (name, has_caught, type) VALUES (?1, ?2, ?3)", (pokemon.name, pokemon.has_caught, pokemon.type_)) {
+        Ok(_) => println!("Pokemon added successfully"),
+        Err(e) => eprintln!("Failed to add Pokemon to database: {}", e),
+    }
 }
 
 fn handle_list(conn: &Connection) {
