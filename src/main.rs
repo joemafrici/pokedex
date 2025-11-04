@@ -19,13 +19,16 @@ fn main() {
         let mut op_buff = String::new();
         println!("Enter an option. 1: Add. 2: List All, 3: Search by Type, 4. Edit pokemon");
         io::stdin().read_line(&mut op_buff).expect("Should have been able to read from stdio");
-        let op: u32 = op_buff.trim().parse().expect("Should have been able to convert user menu option input to integer. Maybe the user entered not a number?");
-        match op {
-            1 => handle_add(&conn),
-            2 => handle_list(&conn),
-            3 => handle_search_by_type(&conn),
-            4 => handle_edit_pokemon(&conn),
-            _ => continue
+        if let Ok(op) = op_buff.trim().parse::<u32>() {
+            match op {
+                1 => handle_add(&conn),
+                2 => handle_list(&conn),
+                3 => handle_search_by_type(&conn),
+                4 => handle_edit_pokemon(&conn),
+                _ => println!("Invalid option...")
+            }
+        } else {
+            println!("Enter a valid number")
         }
     }
 }
