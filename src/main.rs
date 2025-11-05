@@ -22,7 +22,11 @@ fn main() {
         if let Ok(op) = op_buff.trim().parse::<u32>() {
             match op {
                 1 => handle_add(&conn),
-                2 => handle_list(&conn),
+                2 => {
+                    if let Err(e) = handle_list(&conn) {
+                        eprintln!("Error listing pokemon: {}", e);
+                    }
+                },
                 3 => handle_search_by_type(&conn),
                 4 => handle_edit_pokemon(&conn),
                 _ => println!("Invalid option...")
@@ -82,18 +86,22 @@ fn handle_add(conn: &Connection) {
     }
 }
 
-fn handle_list(conn: &Connection) {
-    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon").expect("Should have been able to query database for all pokemon");
+fn handle_list(conn: &Connection) -> Result<(), rusqlite::Error> {
+    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon")?;
     let pokemon_iter = stmt.query_map([], |row| {
         Ok(Pokemon {
-            name: row.get("name").expect("Should have been able to get name"),
-            has_caught: row.get("has_caught").expect("Should have been able to get has_caught"),
-            type_: row.get("type").expect("Should have been able to get type"),
+            name: row.get("name")?,
+            has_caught: row.get("has_caught")?,
+            type_: row.get("type")?,
         })
-    }).expect("Should have been able to convert database results to rust objects");
-    for pokemon in pokemon_iter {
-        println!("Found pokemon {:?}", pokemon.expect("Should have been able to get pokemon"));
+    })?;
+    for pokemon_result in pokemon_iter {
+        match pokemon_result {
+            Ok(pokemon) => println!("Found pokemon: {:?}", pokemon),
+            Err(e) => eprintln!("Failed to read Pokemon row: {}", e)
+        }
     }
+    Ok(())
 }
 
 fn handle_search_by_type(conn: &Connection) {
@@ -117,7 +125,9 @@ fn handle_search_by_type(conn: &Connection) {
     }
 }
 fn handle_edit_pokemon(conn: &Connection) {
-    handle_list(&conn);
+    if let Err(e) = handle_list(&conn) {
+        eprintln!("Error listing pokemon: {}", e);
+    }
     println!("Enter the name of the pokemon you want to edit:");
     let mut buf = String::new();
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
