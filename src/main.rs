@@ -27,7 +27,7 @@ fn main() {
                         eprintln!("Error listing pokemon: {}", e);
                     }
                 },
-                3 => handle_search_by_type(&conn),
+                3 => handle_search_by_type(&conn).unwrap_or_else(|e| eprintln!("Error listing pokemon: {}", e)),
                 4 => handle_edit_pokemon(&conn),
                 _ => println!("Invalid option...")
             }
@@ -104,25 +104,30 @@ fn handle_list(conn: &Connection) -> Result<(), rusqlite::Error> {
     Ok(())
 }
 
-fn handle_search_by_type(conn: &Connection) {
+fn handle_search_by_type(conn: &Connection) -> Result<(), rusqlite::Error> {
     println!("Enter the pokemon type to search for:");
 
     let mut buf = String::new();
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
     let search_type: Type = buf.parse().expect("Should have been able to parse search type");
-    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon WHERE type = ?1").expect("Should have been able to prepare sql query");
+    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon WHERE type = ?1")?;
 
     let pokemon_iter = stmt.query_map(params![search_type], |row| {
         Ok(Pokemon {
-            name: row.get("name").expect("Should have been bale to get name"),
-            has_caught: row.get("has_caught").expect("Should have been able to get has_caught"),
-            type_: row.get("type").expect("Should have been able to get type"),
+            name: row.get("name")?,
+            has_caught: row.get("has_caught")?,
+            type_: row.get("type")?,
         })
-    }).expect("Should have been able to query database");
+    })?;
 
-    for pokemon in pokemon_iter {
-        println!("Found pokemon {:?}", pokemon.expect("Should have been able to get pokemon"));
+    for pokemon_result in pokemon_iter {
+        match pokemon_result {
+            Ok(pokemon) => println!("Found pokemon {:?}", pokemon),
+            Err(e) => eprintln!("Failed to read pokemon row: {}", e),
+        }
     }
+
+    Ok(())
 }
 fn handle_edit_pokemon(conn: &Connection) {
     if let Err(e) = handle_list(&conn) {
