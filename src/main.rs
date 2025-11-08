@@ -188,10 +188,7 @@ fn handle_edit_pokemon_has_caught(conn: &Connection, pokemon_name: &str) -> Resu
     Ok(())
 }
 fn handle_edit_pokemon_type(conn: &Connection, pokemon_name: &str) {
-    println!("Enter the new pokemon type");
-    let mut buf = String::new();
-    io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
-    let type_: Type = buf.parse().expect("Should hav been able to parse Type");
+    let type_ = read_type_from_user();
 
     let rows_updated= conn.execute("UPDATE pokemon SET type = ?2 WHERE name = ?1", params![pokemon_name, type_]).expect("Should have been able to prepare sql query");
     println!("Updated {} row(s)", rows_updated);
