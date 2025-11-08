@@ -4,7 +4,8 @@ use rusqlite::{params, Connection, ToSql};
 use rusqlite::types::{ValueRef, FromSql, FromSqlResult, ToSqlOutput};
 
 fn main() {
-    let conn = Connection::open_in_memory().expect("Should have been able to open database connection");
+    let path = "data/pokedex.db";
+    let conn = Connection::open(path).expect("Should have been able to open database connection");
     conn.execute("CREATE TABLE IF NOT EXISTS pokemon (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
