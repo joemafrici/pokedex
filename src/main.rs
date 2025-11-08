@@ -36,6 +36,23 @@ fn main() {
         }
     }
 }
+
+fn read_type_from_user() -> Type {
+    loop {
+        let mut type_buf = String::new();
+
+        println!("Enter the pokemon's type:");
+        io::stdin().read_line(&mut type_buf).expect("Should have been able to read from stdio");
+        match type_buf.parse::<Type>() {
+            Ok(t) => return t,
+            Err(e) => {
+                println!("Invalid type: {}. Enter a valid Pokemon type", e);
+                println!("Valid types include: Psychic, Water, Grass, Fire, Fairy, Normal, Bug, Ghost, Dragon, Electric, Ground, Rock, Dark, Unknown.");
+            }
+        }
+    };
+}
+
 fn handle_add(conn: &Connection) {
     let mut name_buf = String::new();
 
@@ -60,19 +77,7 @@ fn handle_add(conn: &Connection) {
         }
     };
 
-    let type_ = loop {
-        let mut type_buf = String::new();
-
-        println!("Enter the pokemon's type:");
-        io::stdin().read_line(&mut type_buf).expect("Should have been able to read from stdio");
-        match type_buf.parse::<Type>() {
-            Ok(t) => break t,
-            Err(e) => {
-                println!("Invalid type: {}. Enter a valid Pokemon type", e);
-                println!("Valid types include: Psychic, Water, Grass, Fire, Fairy, Normal, Bug, Ghost, Dragon, Electric, Ground, Rock, Dark, Unknown.");
-            }
-        }
-    };
+    let type_ = read_type_from_user();
 
     let pokemon = Pokemon {
         name: name_buf.to_string(),
@@ -105,17 +110,7 @@ fn handle_list(conn: &Connection) -> Result<(), rusqlite::Error> {
 }
 
 fn handle_search_by_type(conn: &Connection) -> Result<(), rusqlite::Error> {
-    let search_type = loop {
-        println!("Enter the pokemon type to search for:");
-        let mut buf = String::new();
-        io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
-
-        match buf.parse::<Type>() {
-            Ok(t) => break t,
-            Err(e) => eprintln!("Invalid pokemon Type: {}", e)
-        }
-    };
-
+    let search_type = read_type_from_user();
     let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon WHERE type = ?1")?;
 
     let pokemon_iter = stmt.query_map(params![search_type], |row| {
