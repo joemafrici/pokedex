@@ -163,7 +163,13 @@ fn handle_edit_pokemon(conn: &Connection) {
                 }
                 break 
             },
-            Ok(3) => { handle_edit_pokemon_type(&conn, &buf); break },
+            Ok(3) => {
+                match handle_edit_pokemon_type(&conn, &buf) {
+                    Ok(_) => break,
+                    Err(e) => eprintln!("Error editing pokemon Type: {}", e),
+                }
+                break
+            },
             Ok(_) => println!("Invalid option."),
             Err(_) => println!("Enter a valid number")
         }
@@ -187,11 +193,12 @@ fn handle_edit_pokemon_has_caught(conn: &Connection, pokemon_name: &str) -> Resu
     }
     Ok(())
 }
-fn handle_edit_pokemon_type(conn: &Connection, pokemon_name: &str) {
+fn handle_edit_pokemon_type(conn: &Connection, pokemon_name: &str) -> Result<(), rusqlite::Error> {
     let type_ = read_type_from_user();
 
-    let rows_updated= conn.execute("UPDATE pokemon SET type = ?2 WHERE name = ?1", params![pokemon_name, type_]).expect("Should have been able to prepare sql query");
+    let rows_updated= conn.execute("UPDATE pokemon SET type = ?2 WHERE name = ?1", params![pokemon_name, type_])?;
     println!("Updated {} row(s)", rows_updated);
+    Ok(())
 }
 
 #[derive(Debug, Clone)]
