@@ -105,11 +105,17 @@ fn handle_list(conn: &Connection) -> Result<(), rusqlite::Error> {
 }
 
 fn handle_search_by_type(conn: &Connection) -> Result<(), rusqlite::Error> {
-    println!("Enter the pokemon type to search for:");
+    let search_type = loop {
+        println!("Enter the pokemon type to search for:");
+        let mut buf = String::new();
+        io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
 
-    let mut buf = String::new();
-    io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
-    let search_type: Type = buf.parse().expect("Should have been able to parse search type");
+        match buf.parse::<Type>() {
+            Ok(t) => break t,
+            Err(e) => eprintln!("Invalid pokemon Type: {}", e)
+        }
+    };
+
     let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon WHERE type = ?1")?;
 
     let pokemon_iter = stmt.query_map(params![search_type], |row| {
