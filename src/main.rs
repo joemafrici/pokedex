@@ -130,6 +130,8 @@ fn handle_search_by_type(conn: &Connection) -> Result<(), rusqlite::Error> {
 
     Ok(())
 }
+//TODO: Should probably check to see if the pokemon record exists once the user
+//enters the pokemon's name
 fn handle_edit_pokemon(conn: &Connection) {
     if let Err(e) = handle_list(&conn) {
         eprintln!("Error listing pokemon: {}", e);
@@ -139,15 +141,17 @@ fn handle_edit_pokemon(conn: &Connection) {
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
     let buf = buf.trim();
 
-    println!("Enter the field you would like to edit. 1. Name, 2. has_caught, 3. type");
-    let mut buf2 = String::new();
-    io::stdin().read_line(&mut buf2).expect("Should have been able to read from stdin");
-    let op: u32 = buf2.trim().parse().expect("Should have been able to convert user menu option input to integer. Maybe the user entered not a number?");
-    match op {
-        1 => handle_edit_pokemon_name(&conn, &buf),
-        2 => handle_edit_pokemon_has_caught(&conn, &buf),
-        3 => handle_edit_pokemon_type(&conn, &buf),
-        _ => println!("Invalid input."),
+    loop {
+        let mut buf2 = String::new();
+        println!("Enter the field you would like to edit. 1. Name, 2. has_caught, 3. type");
+        io::stdin().read_line(&mut buf2).expect("Should have been able to read from stdin");
+        match buf2.trim().parse::<u32>() {
+            Ok(1) => { handle_edit_pokemon_name(&conn, &buf); break },
+            Ok(2) => { handle_edit_pokemon_has_caught(&conn, &buf); break },
+            Ok(3) => { handle_edit_pokemon_type(&conn, &buf); break },
+            Ok(_) => println!("Invalid option."),
+            Err(_) => println!("Enter a valid number")
+        }
     }
 }
 // need to change this to return a result eventually
