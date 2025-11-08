@@ -156,7 +156,13 @@ fn handle_edit_pokemon(conn: &Connection) {
                 // differently
                 break;
             },
-            Ok(2) => { handle_edit_pokemon_has_caught(&conn, &buf); break },
+            Ok(2) => { 
+                match handle_edit_pokemon_has_caught(&conn, &buf) {
+                    Ok(_) => break,
+                    Err(e) => eprintln!("Error editing pokemon caught status: {}", e),
+                }
+                break 
+            },
             Ok(3) => { handle_edit_pokemon_type(&conn, &buf); break },
             Ok(_) => println!("Invalid option."),
             Err(_) => println!("Enter a valid number")
@@ -172,13 +178,14 @@ fn handle_edit_pokemon_name(conn: &Connection, pokemon_name: &str) -> Result<(),
     println!("Updated {} row(s)", rows_updated);
     Ok(())
 }
-fn handle_edit_pokemon_has_caught(conn: &Connection, pokemon_name: &str) {
-    let rows_updated = conn.execute("UPDATE pokemon SET has_caught = NOT has_caught WHERE name = ?1", params![pokemon_name]).expect("Should have been able to toggle has_caught value");
+fn handle_edit_pokemon_has_caught(conn: &Connection, pokemon_name: &str) -> Result<(), rusqlite::Error> {
+    let rows_updated = conn.execute("UPDATE pokemon SET has_caught = NOT has_caught WHERE name = ?1", params![pokemon_name])?;
     if rows_updated == 1 {
         println!("has_caught value toggled");
     } else {
         println!("Did not find record to update");
     }
+    Ok(())
 }
 fn handle_edit_pokemon_type(conn: &Connection, pokemon_name: &str) {
     println!("Enter the new pokemon type");
