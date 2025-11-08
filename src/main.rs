@@ -146,7 +146,16 @@ fn handle_edit_pokemon(conn: &Connection) {
         println!("Enter the field you would like to edit. 1. Name, 2. has_caught, 3. type");
         io::stdin().read_line(&mut buf2).expect("Should have been able to read from stdin");
         match buf2.trim().parse::<u32>() {
-            Ok(1) => { handle_edit_pokemon_name(&conn, &buf); break },
+            Ok(1) => { 
+                match handle_edit_pokemon_name(&conn, &buf) {
+                    Ok(_) => break,
+                    Err(e) => eprintln!("Error editing pokemon name: {}", e),
+                }
+                // I'm fine with breaking out here on the error condition. I think in the future
+                // this should be changed to handle user input errors and database errors
+                // differently
+                break;
+            },
             Ok(2) => { handle_edit_pokemon_has_caught(&conn, &buf); break },
             Ok(3) => { handle_edit_pokemon_type(&conn, &buf); break },
             Ok(_) => println!("Invalid option."),
@@ -154,14 +163,14 @@ fn handle_edit_pokemon(conn: &Connection) {
         }
     }
 }
-// need to change this to return a result eventually
-fn handle_edit_pokemon_name(conn: &Connection, pokemon_name: &str) {
+fn handle_edit_pokemon_name(conn: &Connection, pokemon_name: &str) -> Result<(), rusqlite::Error> {
     println!("Enter the new pokemon name");
     let mut buf = String::new();
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
 
-    let rows_updated= conn.execute("UPDATE pokemon SET name = ?2 WHERE name = ?1", params![pokemon_name, buf.trim()]).expect("Should have been able to prepare sql query");
+    let rows_updated= conn.execute("UPDATE pokemon SET name = ?2 WHERE name = ?1", params![pokemon_name, buf.trim()])?;
     println!("Updated {} row(s)", rows_updated);
+    Ok(())
 }
 fn handle_edit_pokemon_has_caught(conn: &Connection, pokemon_name: &str) {
     let rows_updated = conn.execute("UPDATE pokemon SET has_caught = NOT has_caught WHERE name = ?1", params![pokemon_name]).expect("Should have been able to toggle has_caught value");
