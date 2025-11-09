@@ -1,17 +1,12 @@
 use std::io;
-use rusqlite::{params, Connection};
+use rusqlite::Connection;
 use pokedex::models::{Type, Pokemon};
+use pokedex::db::{self, get_pokemon_by_type};
 
 fn main() {
     let path = "data/pokedex.db";
-    let conn = Connection::open(path).expect("Should have been able to open database connection");
-    conn.execute("CREATE TABLE IF NOT EXISTS pokemon (
-            id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            has_caught BOOLEAN NOT NULL,
-            type TEXT NOT NULL
-        )", (),
-    ).expect("Should have been able to create pokemon table");
+
+    let conn = db::init_db(path).expect("Should have been able to initialize database");
 
     println!("Welcome to Pokedex");
 
@@ -85,47 +80,26 @@ fn handle_add(conn: &Connection) {
         type_
     };
 
-    match conn.execute("INSERT INTO pokemon (name, has_caught, type) VALUES (?1, ?2, ?3)", (pokemon.name, pokemon.has_caught, pokemon.type_)) {
-        Ok(_) => println!("Pokemon added successfully"),
-        Err(e) => eprintln!("Failed to add Pokemon to database: {}", e),
-    }
+    // need to add error handling
+    db::add_pokemon(conn, pokemon).expect("Should have been able to add pokemon to database");
 }
 
 fn handle_list(conn: &Connection) -> Result<(), rusqlite::Error> {
-    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon")?;
-    let pokemon_iter = stmt.query_map([], |row| {
-        Ok(Pokemon {
-            name: row.get("name")?,
-            has_caught: row.get("has_caught")?,
-            type_: row.get("type")?,
-        })
-    })?;
-    for pokemon_result in pokemon_iter {
-        match pokemon_result {
-            Ok(pokemon) => println!("Found pokemon: {:?}", pokemon),
-            Err(e) => eprintln!("Failed to read Pokemon row: {}", e)
-        }
+    let all_pokemon = db::get_all_pokemon(conn).expect("Should have been able to retrieve all pokemon from database");
+
+    for pokemon in all_pokemon {
+        println!("{:?}", pokemon);
     }
+
     Ok(())
 }
 
 fn handle_search_by_type(conn: &Connection) -> Result<(), rusqlite::Error> {
     let search_type = read_type_from_user();
-    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon WHERE type = ?1")?;
+    let results = get_pokemon_by_type(conn, search_type)?;
 
-    let pokemon_iter = stmt.query_map(params![search_type], |row| {
-        Ok(Pokemon {
-            name: row.get("name")?,
-            has_caught: row.get("has_caught")?,
-            type_: row.get("type")?,
-        })
-    })?;
-
-    for pokemon_result in pokemon_iter {
-        match pokemon_result {
-            Ok(pokemon) => println!("Found pokemon {:?}", pokemon),
-            Err(e) => eprintln!("Failed to read pokemon row: {}", e),
-        }
+    for pokemon in results {
+        println!("{:?}", pokemon);
     }
 
     Ok(())
@@ -179,25 +153,29 @@ fn handle_edit_pokemon_name(conn: &Connection, pokemon_name: &str) -> Result<(),
     println!("Enter the new pokemon name");
     let mut buf = String::new();
     io::stdin().read_line(&mut buf).expect("Should have been able to read from stdin");
-
-    let rows_updated= conn.execute("UPDATE pokemon SET name = ?2 WHERE name = ?1", params![pokemon_name, buf.trim()])?;
-    println!("Updated {} row(s)", rows_updated);
+    let buf = buf.trim();
+    let result = db::edit_pokemon_name(conn, pokemon_name, buf)?;
+    match result {
+        Some(p) => println!("New value: {:?}", p),
+        None => println!("Could not find pokemon"),
+    }
     Ok(())
 }
 fn handle_edit_pokemon_has_caught(conn: &Connection, pokemon_name: &str) -> Result<(), rusqlite::Error> {
-    let rows_updated = conn.execute("UPDATE pokemon SET has_caught = NOT has_caught WHERE name = ?1", params![pokemon_name])?;
-    if rows_updated == 1 {
-        println!("has_caught value toggled");
-    } else {
-        println!("Did not find record to update");
+    let result = db::edit_pokemon_has_caught(conn, pokemon_name)?;
+    match result {
+        Some(p) => println!("New value: {:?}", p),
+        None => println!("Could not find pokemon"),
     }
     Ok(())
 }
 fn handle_edit_pokemon_type(conn: &Connection, pokemon_name: &str) -> Result<(), rusqlite::Error> {
     let type_ = read_type_from_user();
 
-    let rows_updated= conn.execute("UPDATE pokemon SET type = ?2 WHERE name = ?1", params![pokemon_name, type_])?;
-    println!("Updated {} row(s)", rows_updated);
+    let result = db::edit_pokemon_type(conn, pokemon_name, type_)?;
+    match result {
+        Some(p) => println!("New value: {:?}", p),
+        None => println!("Could not find pokemon"),
+    }
     Ok(())
 }
-

@@ -9,6 +9,8 @@ pub struct Pokemon {
     pub type_: Type
 }
 
+// TODO: add Poison
+// add combo typing
 #[derive(Debug, Clone)]
 pub enum Type {
     Psychic,
