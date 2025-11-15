@@ -1,17 +1,25 @@
+use std::str::FromStr;
 use rusqlite::ToSql;
 use rusqlite::types::{ValueRef, ToSqlOutput, FromSql, FromSqlResult};
-use std::str::FromStr;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pokemon {
     pub name: String,
     pub has_caught: bool,
     pub type_: Type
 }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdatePokemon {
+    pub current_name: Option<String>,
+    pub name: Option<String>,
+    pub has_caught: Option<bool>,
+    pub type_: Option<Type>,
+}
 
 // TODO: add Poison
 // add combo typing
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Type {
     Psychic,
     Water,
