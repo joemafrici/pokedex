@@ -7,7 +7,6 @@ use pokedex::db;
 
 #[tokio::main]
 async fn main() {
-    // build our application with a single route
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .route("/api/pokemon", post(handle_add_pokemon).get(handle_get_all_pokemon))
@@ -67,8 +66,6 @@ async fn handle_update_pokemon(Path(id): Path<u32>, Json(pokemon): Json<Pokemon>
         None => Err(StatusCode::NOT_FOUND),
     }
 }
-/// Only the id in the path is used to determine which
-/// record to modify
 async fn handle_delete_pokemon(Path(id): Path<u32>) -> Result<Json<DeletePokemonResponse>, StatusCode> {
     println!("Deleting pokemon with id: {}", id);
 
