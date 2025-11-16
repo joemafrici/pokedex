@@ -10,6 +10,12 @@ pub struct Pokemon {
     pub has_caught: bool,
     pub type_: Type
 }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NewPokemon {
+    pub name: String,
+    pub has_caught: bool,
+    pub type_: Type
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdatePokemon {
     pub current_name: Option<String>,

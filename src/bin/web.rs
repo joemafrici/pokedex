@@ -2,7 +2,7 @@ use axum::{
     extract::{Json, Path, Query}, http::StatusCode, routing::{get, post}, Router
 };
 use std::collections::HashMap;
-use pokedex::models::{Pokemon, UpdatePokemon};
+use pokedex::models::{Pokemon, NewPokemon, UpdatePokemon};
 use pokedex::db;
 
 #[tokio::main]
@@ -20,9 +20,15 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn handle_add_pokemon(Json(pokemon): Json<Pokemon>) {
-    println!("NOT IMPLEMENTED YET");
+async fn handle_add_pokemon(Json(pokemon): Json<NewPokemon>) -> Result<Json<Pokemon>, StatusCode> {
     println!("Adding pokemon: {:?}", pokemon);
+
+    let path = "data/pokedex.db";
+    let conn = db::init_db(path).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let saved = db::add_pokemon(&conn, pokemon).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(saved))
 }
 async fn handle_get_all_pokemon() -> Result<Json<Vec<Pokemon>>, StatusCode> {
     println!("Getting all pokemon");

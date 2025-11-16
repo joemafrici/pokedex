@@ -1,4 +1,4 @@
-use crate::models::{Pokemon, Type};
+use crate::models::{Pokemon, NewPokemon, Type};
 use rusqlite::{Connection, Result, params};
 
 pub fn init_db(path: &str) -> Result<rusqlite::Connection> {
@@ -14,9 +14,14 @@ pub fn init_db(path: &str) -> Result<rusqlite::Connection> {
     )?;
     Ok(conn)
 }
-pub fn add_pokemon(conn: &Connection, pokemon: Pokemon) -> Result<()> {
-    conn.execute("INSERT INTO pokemon (name, has_caught, type) VALUES (?1, ?2, ?3)", (pokemon.name, pokemon.has_caught, pokemon.type_))?;
-    Ok(())
+pub fn add_pokemon(conn: &Connection, pokemon: NewPokemon) -> Result<Pokemon> {
+    let id: u32 = conn.query_row("INSERT INTO pokemon (name, has_caught, type) VALUES (?1, ?2, ?3) RETURNING id;", (&pokemon.name, &pokemon.has_caught, &pokemon.type_), |row| row.get("id"))?;
+    Ok(Pokemon{
+        id,
+        name: pokemon.name,
+        has_caught: pokemon.has_caught,
+        type_: pokemon.type_
+    })
 }
 pub fn get_all_pokemon(conn: &Connection) -> Result<Vec<Pokemon>> {
     let mut stmt = conn.prepare("SELECT id, name, has_caught, type FROM pokemon")?;
