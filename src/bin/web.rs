@@ -2,7 +2,7 @@ use axum::{
     extract::{Json, Path, Query}, http::StatusCode, routing::{get, post}, Router
 };
 use std::collections::HashMap;
-use pokedex::models::{Pokemon, NewPokemon, UpdatePokemon};
+use pokedex::models::{Pokemon, NewPokemon, DeletePokemonResponse};
 use pokedex::db;
 
 #[tokio::main]
@@ -67,9 +67,17 @@ async fn handle_update_pokemon(Path(id): Path<u32>, Json(pokemon): Json<Pokemon>
         None => Err(StatusCode::NOT_FOUND),
     }
 }
-async fn handle_delete_pokemon(Path(id): Path<u32>) {
-    println!("NOT IMPLEMENTED YET");
+/// Only the id in the path is used to determine which
+/// record to modify
+async fn handle_delete_pokemon(Path(id): Path<u32>) -> Result<Json<DeletePokemonResponse>, StatusCode> {
     println!("Deleting pokemon with id: {}", id);
+
+    let path = "data/pokedex.db";
+    let conn = db::init_db(path).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let result = db::delete_pokemon_by_id(&conn, id).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Json(DeletePokemonResponse {
+        deleted: result,
+    }))
 }
 async fn handle_get_pokemon_by_name(Query(params): Query<HashMap<String, String>>) {
     println!("NOT IMPLEMENTED YET");
@@ -78,8 +86,4 @@ async fn handle_get_pokemon_by_name(Query(params): Query<HashMap<String, String>
 async fn handle_get_pokemon_by_type(Query(params): Query<HashMap<String, String>>) {
     println!("NOT IMPLEMENTED YET");
     println!("Got params: {:?}", params);
-}
-async fn handle_edit_pokemon_name(Json(update): Json<UpdatePokemon>) {
-    println!("NOT IMPLEMENTED YET");
-    println!("Updating Pokemon name. New values: {:?}", update);
 }

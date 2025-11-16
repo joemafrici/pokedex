@@ -68,6 +68,10 @@ pub fn edit_pokemon_by_id(conn: &Connection, id: u32, pokemon: Pokemon) -> Resul
     }
 
 }
+pub fn delete_pokemon_by_id(conn: &Connection, id: u32) -> Result<bool> {
+    let rows_affected = conn.execute("DELETE FROM pokemon WHERE id = ?1", params![id])?;
+    Ok(rows_affected > 0)
+}
 pub fn get_pokemon_by_name(conn: &Connection, name: &str) -> Result<Vec<Pokemon>> {
     let mut stmt = conn.prepare("SELECT id, name, has_caught, type FROM pokemon WHERE name = ?1")?;
 

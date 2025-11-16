@@ -16,6 +16,10 @@ pub struct NewPokemon {
     pub has_caught: bool,
     pub type_: Type
 }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeletePokemonResponse {
+    pub deleted: bool,
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdatePokemon {
     pub current_name: Option<String>,
