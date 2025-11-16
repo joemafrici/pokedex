@@ -1,6 +1,7 @@
 use axum::{
     extract::{Json, Path, Query}, http::StatusCode, routing::{get, post}, Router
 };
+use tower_http::cors::{CorsLayer, Any};
 use std::collections::HashMap;
 use pokedex::models::{Pokemon, NewPokemon, DeletePokemonResponse};
 use pokedex::db;
@@ -13,6 +14,16 @@ async fn main() {
         .route("/api/pokemon/{id}", get(handle_get_a_pokemon).put(handle_update_pokemon).delete(handle_delete_pokemon))
         .route("/api/get_by_name", get(handle_get_pokemon_by_name))
         .route("/api/get_by_type", get(handle_get_pokemon_by_type));
+
+    let app = if cfg!(debug_assertions) {
+        let cors = CorsLayer::new()
+            .allow_origin(Any)
+            .allow_methods(Any)
+            .allow_headers(Any);
+        app.layer(cors)
+    } else {
+        app
+    };
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
