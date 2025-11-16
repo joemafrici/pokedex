@@ -1,23 +1,21 @@
 use axum::{
-    routing::get,
-    routing::post,
-    routing::put,
-    extract::{Json, Query},
+    routing::{get, post},
+    extract::{Json, Query, Path},
     Router,
 };
 use std::collections::HashMap;
 use pokedex::models::{Pokemon, UpdatePokemon};
+use pokedex::db;
 
 #[tokio::main]
 async fn main() {
     // build our application with a single route
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
-        .route("/api/add", post(handle_add_pokemon))
-        .route("/api/get_all", get(handle_get_all_pokemon))
+        .route("/api/pokemon", post(handle_add_pokemon).get(handle_get_all_pokemon))
+        .route("/api/pokemon/{id}", get(handle_get_a_pokemon).put(handle_update_pokemon).delete(handle_delete_pokemon))
         .route("/api/get_by_name", get(handle_get_pokemon_by_name))
-        .route("/api/get_by_type", get(handle_get_pokemon_by_type))
-        .route("/api/edit_name", put(handle_edit_pokemon_name));
+        .route("/api/get_by_type", get(handle_get_pokemon_by_type));
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -28,9 +26,29 @@ async fn handle_add_pokemon(Json(pokemon): Json<Pokemon>) {
     println!("NOT IMPLEMENTED YET");
     println!("Adding pokemon: {:?}", pokemon);
 }
-async fn handle_get_all_pokemon() {
-    println!("NOT IMPLEMENTED YET");
+async fn handle_get_all_pokemon() -> axum::Json<Vec<Pokemon>>{
     println!("Getting all pokemon");
+    let path = "data/pokedex.db";
+
+    let conn = db::init_db(path).expect("Should have been able to initialize database");
+    let results = db::get_all_pokemon(&conn).expect("Should have been able to get all pokemon");
+
+    for pokemon in &results {
+        println!("{:?}", pokemon)
+    }
+    Json(results)
+}
+async fn handle_get_a_pokemon(Path(id): Path<u32>) {
+    println!("NOT IMPLEMENTED YET");
+    println!("Getting pokemon with id: {}", id);
+}
+async fn handle_update_pokemon(Path(id): Path<u32>) {
+    println!("NOT IMPLEMENTED YET");
+    println!("Updating pokemon with id: {}", id);
+}
+async fn handle_delete_pokemon(Path(id): Path<u32>) {
+    println!("NOT IMPLEMENTED YET");
+    println!("Deleting pokemon with id: {}", id);
 }
 async fn handle_get_pokemon_by_name(Query(params): Query<HashMap<String, String>>) {
     println!("NOT IMPLEMENTED YET");
