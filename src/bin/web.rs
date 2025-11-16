@@ -24,17 +24,17 @@ async fn handle_add_pokemon(Json(pokemon): Json<Pokemon>) {
     println!("NOT IMPLEMENTED YET");
     println!("Adding pokemon: {:?}", pokemon);
 }
-async fn handle_get_all_pokemon() -> axum::Json<Vec<Pokemon>>{
+async fn handle_get_all_pokemon() -> Result<Json<Vec<Pokemon>>, StatusCode> {
     println!("Getting all pokemon");
     let path = "data/pokedex.db";
 
-    let conn = db::init_db(path).expect("Should have been able to initialize database");
-    let results = db::get_all_pokemon(&conn).expect("Should have been able to get all pokemon");
+    let conn = db::init_db(path).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let results = db::get_all_pokemon(&conn).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     for pokemon in &results {
         println!("{:?}", pokemon)
     }
-    Json(results)
+    Ok(Json(results))
 }
 async fn handle_get_a_pokemon(Path(id): Path<u32>) -> Result<Json<Pokemon>, StatusCode> {
     println!("Getting pokemon with id: {}", id);
