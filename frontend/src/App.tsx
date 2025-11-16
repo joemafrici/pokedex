@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getAllPokemon } from './api/pokemon'
-import type { Pokemon } from './types'
+import { getAllPokemon, addPokemon } from './api/pokemon'
+import type { Pokemon, NewPokemon } from './types'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -10,6 +10,10 @@ function App() {
   const [pokemon, setPokemon] = useState<Pokemon[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [newName, setNewName] = useState("");
+  const [newType, setNewType] = useState("");
+  const [newHasCaught, setNewHasCaught] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -29,6 +33,29 @@ function App() {
 
     fetchData();
   }, []);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newPokemon: NewPokemon = {
+      name: newName,
+      type_: newType,
+      has_caught: newHasCaught,
+    };
+
+    try {
+      const added = await addPokemon(newPokemon);
+      setPokemon((prev) => [...prev, added]);
+      setNewName("");
+      setNewType("");
+      setNewHasCaught(false);
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Unknown error occurred");
+        }
+    }
+  };
 
   if (loading) return <div>Loading Pokemon...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -52,6 +79,32 @@ function App() {
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
       </div>
+
+      <h2>Add a new Pokemon</h2>
+      <form onSubmit={handleAdd}>
+        <input
+          type='text'
+          placeholder='Name'
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          required
+        />
+        <input
+          type='text'
+          placeholder='Type'
+          value={newType}
+          onChange={(e) => setNewType(e.target.value)}
+          required
+        />
+        <label>
+          <input
+            type='checkbox'
+            checked={newHasCaught}
+            onChange={(e) => setNewHasCaught(e.target.checked)}
+          />
+        </label>
+        <button type='submit'>Add Pokemon</button>
+      </form>
       <ul>
         {pokemon.map((p) => (
           <li key={p.id}>
