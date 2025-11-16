@@ -30,6 +30,19 @@ pub fn get_all_pokemon(conn: &Connection) -> Result<Vec<Pokemon>> {
     })?;
     Ok(rows.filter_map(Result::ok).collect())
 }
+pub fn get_pokemon_by_id(conn: &Connection, id: u32) -> Result<Option<Pokemon>> {
+    let mut stmt = conn.prepare("SELECT id, name, has_caught, type FROM pokemon WHERE id = ?1")?;
+    let pokemon = stmt.query_row(params![id], |row| {
+        Ok(Pokemon {
+            id: row.get("id")?,
+            name: row.get("name")?,
+            has_caught: row.get("has_caught")?,
+            type_: row.get("type")?,
+        })
+    })?;
+
+    Ok(Some(pokemon))
+}
 pub fn get_pokemon_by_name(conn: &Connection, name: &str) -> Result<Vec<Pokemon>> {
     let mut stmt = conn.prepare("SELECT id, name, has_caught, type FROM pokemon WHERE name = ?1")?;
 

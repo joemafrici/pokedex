@@ -1,7 +1,5 @@
 use axum::{
-    routing::{get, post},
-    extract::{Json, Query, Path},
-    Router,
+    extract::{Json, Path, Query}, http::StatusCode, routing::{get, post}, Router
 };
 use std::collections::HashMap;
 use pokedex::models::{Pokemon, UpdatePokemon};
@@ -38,9 +36,16 @@ async fn handle_get_all_pokemon() -> axum::Json<Vec<Pokemon>>{
     }
     Json(results)
 }
-async fn handle_get_a_pokemon(Path(id): Path<u32>) {
-    println!("NOT IMPLEMENTED YET");
+async fn handle_get_a_pokemon(Path(id): Path<u32>) -> Result<Json<Pokemon>, StatusCode> {
     println!("Getting pokemon with id: {}", id);
+    let path = "data/pokedex.db";
+    let conn = db::init_db(path).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let result = db::get_pokemon_by_id(&conn, id).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    match result {
+        Some(p) => Ok(Json(p)),
+        None => Err(StatusCode::NOT_FOUND),
+    }
 }
 async fn handle_update_pokemon(Path(id): Path<u32>) {
     println!("NOT IMPLEMENTED YET");
