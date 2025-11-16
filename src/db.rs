@@ -48,6 +48,26 @@ pub fn get_pokemon_by_id(conn: &Connection, id: u32) -> Result<Option<Pokemon>> 
 
     Ok(Some(pokemon))
 }
+pub fn edit_pokemon_by_id(conn: &Connection, id: u32, pokemon: Pokemon) -> Result<Option<Pokemon>> {
+    let mut stmt= conn.prepare("UPDATE pokemon SET name = ?1, has_caught = ?2, type = ?3 WHERE id = ?4 RETURNING id, name, has_caught, type")?;
+
+
+    let result = stmt.query_row(params![pokemon.name, pokemon.has_caught, pokemon.type_, id], |row| {
+        Ok(Pokemon {
+            id: row.get("id")?,
+            name: row.get("name")?,
+            has_caught: row.get("has_caught")?,
+            type_: row.get("type")?,
+        })
+    });
+
+    match result {
+        Ok(p) => Ok(Some(p)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e),
+    }
+
+}
 pub fn get_pokemon_by_name(conn: &Connection, name: &str) -> Result<Vec<Pokemon>> {
     let mut stmt = conn.prepare("SELECT id, name, has_caught, type FROM pokemon WHERE name = ?1")?;
 

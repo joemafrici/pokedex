@@ -53,9 +53,19 @@ async fn handle_get_a_pokemon(Path(id): Path<u32>) -> Result<Json<Pokemon>, Stat
         None => Err(StatusCode::NOT_FOUND),
     }
 }
-async fn handle_update_pokemon(Path(id): Path<u32>) {
-    println!("NOT IMPLEMENTED YET");
-    println!("Updating pokemon with id: {}", id);
+/// Only the id in the path is used to determine which
+/// record to modify
+async fn handle_update_pokemon(Path(id): Path<u32>, Json(pokemon): Json<Pokemon>) -> Result<Json<Pokemon>, StatusCode> {
+    println!("Updating pokemon with id: {}\n and values: {:?}", id, pokemon);
+
+    let path = "data/pokedex.db";
+    let conn = db::init_db(path).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let result = db::edit_pokemon_by_id(&conn, id, pokemon).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    match result {
+        Some(p) => Ok(Json(p)),
+        None => Err(StatusCode::NOT_FOUND),
+    }
 }
 async fn handle_delete_pokemon(Path(id): Path<u32>) {
     println!("NOT IMPLEMENTED YET");
