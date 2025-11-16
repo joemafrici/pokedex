@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getAllPokemon, addPokemon } from './api/pokemon'
+import { getAllPokemon, addPokemon, updatePokemon } from './api/pokemon'
 import type { Pokemon, NewPokemon } from './types'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
@@ -14,6 +14,11 @@ function App() {
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState("");
   const [newHasCaught, setNewHasCaught] = useState(false);
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editType, setEditType] = useState("");
+  const [editHasCaught, setEditHasCaught] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -57,6 +62,34 @@ function App() {
     }
   };
 
+  const startEditing = (p: Pokemon) => {
+    setEditingId(p.id);
+    setEditName(p.name);
+    setEditType(p.type_);
+    setEditHasCaught(p.has_caught);
+  };
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (editingId === null) return;
+
+    const updated: Pokemon = {
+      id: editingId,
+      name: editName,
+      type_: editType,
+      has_caught: editHasCaught,
+    };
+
+    try {
+      const result = await updatePokemon(updated);
+
+      setPokemon((prev) => prev.map((p) => (p.id === result.id ? result : p)));
+      setEditingId(null);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+    }
+  };
+
   if (loading) return <div>Loading Pokemon...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -97,6 +130,7 @@ function App() {
           required
         />
         <label>
+          Caught?
           <input
             type='checkbox'
             checked={newHasCaught}
@@ -108,7 +142,35 @@ function App() {
       <ul>
         {pokemon.map((p) => (
           <li key={p.id}>
-            {p.name} ({p.type_}) - {p.has_caught ? "Caught" : "Not caught"}
+            {editingId === p.id? (
+              <form onSubmit={handleUpdate}>
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                />
+                <input
+                  value={editType}
+                  onChange={(e) => setEditType(e.target.value)}
+                />
+                <label>
+                  Caught?
+                  <input
+                    type='checkbox'
+                    checked={editHasCaught}
+                    onChange={(e) => setEditHasCaught(e.target.checked)}
+                  />
+                </label>
+                <button type='submit'>Save</button>
+                <button type='button' onClick={() => setEditingId(null)}>
+                  Cancel
+                </button>
+              </form>
+            ) : (
+              <>
+                {p.name} ({p.type_}) - {p.has_caught ? "Caught" : "Not caught"}
+                <button onClick={() => startEditing(p)}>Edit</button>
+              </>
+            )}
           </li>
         ))}
       </ul>
