@@ -5,6 +5,7 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pokemon {
+    pub id: u32,
     pub name: String,
     pub has_caught: bool,
     pub type_: Type
