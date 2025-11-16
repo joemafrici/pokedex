@@ -19,7 +19,7 @@ pub fn add_pokemon(conn: &Connection, pokemon: Pokemon) -> Result<()> {
     Ok(())
 }
 pub fn get_all_pokemon(conn: &Connection) -> Result<Vec<Pokemon>> {
-    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon")?;
+    let mut stmt = conn.prepare("SELECT id, name, has_caught, type FROM pokemon")?;
     let rows = stmt.query_map([], |row| {
         Ok(Pokemon {
             id: row.get("id")?,
@@ -31,7 +31,7 @@ pub fn get_all_pokemon(conn: &Connection) -> Result<Vec<Pokemon>> {
     Ok(rows.filter_map(Result::ok).collect())
 }
 pub fn get_pokemon_by_name(conn: &Connection, name: &str) -> Result<Vec<Pokemon>> {
-    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon WHERE name = ?1")?;
+    let mut stmt = conn.prepare("SELECT id, name, has_caught, type FROM pokemon WHERE name = ?1")?;
 
     let rows = stmt.query_map(params![name], |row| {
         Ok(Pokemon {
@@ -44,7 +44,7 @@ pub fn get_pokemon_by_name(conn: &Connection, name: &str) -> Result<Vec<Pokemon>
     Ok(rows.filter_map(Result::ok).collect())
 }
 pub fn get_pokemon_by_type(conn: &Connection, type_: Type) -> Result<Vec<Pokemon>> {
-    let mut stmt = conn.prepare("SELECT name, has_caught, type FROM pokemon WHERE type = ?1")?;
+    let mut stmt = conn.prepare("SELECT id, name, has_caught, type FROM pokemon WHERE type = ?1")?;
 
     let rows = stmt.query_map(params![type_], |row| {
         Ok(Pokemon {
