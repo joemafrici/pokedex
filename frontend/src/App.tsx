@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react'
 import { getAllPokemon, addPokemon, updatePokemon } from './api/pokemon'
 import type { Pokemon, NewPokemon } from './types'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
   const [pokemon, setPokemon] = useState<Pokemon[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
