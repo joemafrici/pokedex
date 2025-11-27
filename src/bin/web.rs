@@ -2,12 +2,21 @@ use axum::{
     extract::{Json, Path, Query}, http::StatusCode, routing::{get, post}, Router
 };
 use tower_http::cors::{CorsLayer, Any};
-use std::collections::HashMap;
+use std::{collections::HashMap, fs::{self}};
 use pokedex::models::{Pokemon, NewPokemon, DeletePokemonResponse};
 use pokedex::db;
 
 #[tokio::main]
 async fn main() {
+    let db_path = "data/pokedex.db";
+    let path = std::path::Path::new(&db_path);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).expect("Should have been able to create database directory");
+    }
+
+    // don't need the connection because for now we're creating a new connection on every request
+    let _ = db::init_db(db_path).expect("Should have been able to initialize database");
+
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .route("/api/pokemon", post(handle_add_pokemon).get(handle_get_all_pokemon))
