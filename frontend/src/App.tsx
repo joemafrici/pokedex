@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getAllPokemon, addPokemon, updatePokemon } from './api/pokemon'
 import type { Pokemon, NewPokemon } from './types'
 import './App.css'
+import AddPokemonForm from './components/AddPokemonForm';
 
 function App() {
   const [pokemon, setPokemon] = useState<Pokemon[]>([]);
@@ -93,33 +94,7 @@ function App() {
   return (
     <>
       <h1>Pokedex</h1>
-
-      <h2>Add a new Pokemon</h2>
-      <form onSubmit={handleAdd}>
-        <input
-          type='text'
-          placeholder='Name'
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          required
-        />
-        <input
-          type='text'
-          placeholder='Type'
-          value={newType}
-          onChange={(e) => setNewType(e.target.value)}
-          required
-        />
-        <label>
-          Caught?
-          <input
-            type='checkbox'
-            checked={newHasCaught}
-            onChange={(e) => setNewHasCaught(e.target.checked)}
-          />
-        </label>
-        <button type='submit'>Add Pokemon</button>
-      </form>
+      <AddPokemonForm/>
       <ul>
         {pokemon.map((p) => (
           <li key={p.id}>
